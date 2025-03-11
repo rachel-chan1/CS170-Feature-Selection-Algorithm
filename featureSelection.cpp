@@ -2,11 +2,12 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
-void featureSearch(int data[]);
-int accuracy;
+void featureSearch(vector<vector<double>> data);
+int leaveOneOutCrossValidation();
 
 int main() {
     cout << "Welcome to Rachel's Feature Selection Algorithm." << endl;
@@ -36,15 +37,41 @@ int main() {
 
     file.close();
 
+    featureSearch(data);
+
 
 
     return 0;
 }
 
-void featureSearch(int data[]) {
-    //for(int i = 0; i < )
+void featureSearch(vector<vector<double>> data) {
+    vector<int> currentSetOfFeatures(data[0].size() - 1);
+    int featureToAddAtThisLevel = -1;
+
+    int bestSoFarAccuracy = 0;
+    int accuracy = 0;
+
+    for(int i = 1; i < data[0].size(); ++i) {
+        cout << "On the " << i << "th level of the search tree" << endl;
+        bestSoFarAccuracy = 0;
+        for(int j = 1; j < data[i].size(); ++j) {
+            // check if current feature being considered has already been added
+            if(find(currentSetOfFeatures.begin(), currentSetOfFeatures.end(), j) != currentSetOfFeatures.end()) {
+                continue;
+            }
+            cout << "Considering adding the " << j << " feature" << endl;
+            accuracy = leaveOneOutCrossValidation();
+
+            if(accuracy > bestSoFarAccuracy) {
+                bestSoFarAccuracy = accuracy;
+                featureToAddAtThisLevel = j;
+            }
+        }
+        currentSetOfFeatures[i] = featureToAddAtThisLevel;
+        cout << "On level " << i << " I added feature " << featureToAddAtThisLevel << " to current set" << endl;
+    }
 }
 
-int accuracy() {
+int leaveOneOutCrossValidation() {
     return 0;
 }
