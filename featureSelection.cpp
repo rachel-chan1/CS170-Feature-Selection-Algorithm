@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void featureSearch(vector<vector<double>>);
+void forwardSearch(vector<vector<double>>);
 double leaveOneOutCrossValidation(vector<vector<double>>, vector<int>, int);
 double euclideanDistance(vector<double>, vector<double>);
 
@@ -39,21 +39,31 @@ int main() {
 
     file.close();
 
-    featureSearch(data);
+    cout << "Type the number of the algorithm you want to run." << endl
+         << "   1) Forward Selection" << endl
+         << "   2) Backward Elimination" << endl;
+
+    int alg = -1;
+    cin >> alg;
+
+    cout << "This dataset has " << data[0].size()-1 << " features (not including the class attribute), with " << data.size() << " instances." << endl;
+    cout << "Running nearest neighbor with all " << data[0].size()-1 << " features, using \"leaving-one-out\" evaluation, I get an accuracy of " << endl;
+ 
+    forwardSearch(data);
     //leaveOneOutCrossValidation(data);
-
-
 
     return 0;
 }
 
 // forward search
-void featureSearch(vector<vector<double>> data) {
+void forwardSearch(vector<vector<double>> data) {
     vector<int> currentSetOfFeatures;
+    vector<int> bestAccuracySubset;
     int featureToAddAtThisLevel = -1;
 
     double bestSoFarAccuracy = 0;
     double accuracy = 0;
+    double bestOverallAccuracy = 0;
 
     for(int i = 1; i < data[0].size(); ++i) {
         cout << "On the " << i << "th level of the search tree" << endl;
@@ -63,9 +73,23 @@ void featureSearch(vector<vector<double>> data) {
             if(find(currentSetOfFeatures.begin(), currentSetOfFeatures.end(), j) != currentSetOfFeatures.end()) {
                 continue;
             }
-            cout << "Considering adding the " << j << " feature" << endl;
+            //cout << "Considering adding the " << j << " feature" << endl;
             accuracy = leaveOneOutCrossValidation(data, currentSetOfFeatures, j);
-            //cout << "ACCCCCCCCCUUUUUURRRRRAAAACCCYYYYYYYY " << accuracy << endl;
+            if(currentSetOfFeatures.size() == 0) {
+                cout << "Using feature(s) {" << j << "} accuracy is " << accuracy*100 << '%' << endl;
+            }
+            else {
+                cout << "Using feature(s) {" << j << ", ";
+                for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
+                    if(i == currentSetOfFeatures.size()-1) {
+                        cout << currentSetOfFeatures[i];
+                    }
+                    else {
+                        cout << currentSetOfFeatures[i] << ", ";
+                    }
+                }
+                cout << "} accuracy is " << accuracy*100 << '%' << endl;
+            }
 
             if(accuracy > bestSoFarAccuracy) {
                 bestSoFarAccuracy = accuracy;
@@ -73,8 +97,33 @@ void featureSearch(vector<vector<double>> data) {
             }
         }
         currentSetOfFeatures.push_back(featureToAddAtThisLevel);
-        cout << "On level " << i << " I added feature " << featureToAddAtThisLevel << " to current set" << endl;
+        sort(currentSetOfFeatures.begin(), currentSetOfFeatures.end());
+        if(bestSoFarAccuracy > bestOverallAccuracy) {
+            bestOverallAccuracy = bestSoFarAccuracy;
+            bestAccuracySubset = currentSetOfFeatures;
+        }
+        cout << "Feature set {";
+        for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
+            if(i == currentSetOfFeatures.size()-1) {
+                cout << currentSetOfFeatures[i];
+            }
+            else {
+                cout << currentSetOfFeatures[i] << ", ";
+            }
+        }
+        cout << "} was best, accuracy is " << bestSoFarAccuracy*100 << '%' << endl;
+        //cout << "On level " << i << " I added feature " << featureToAddAtThisLevel << " to current set" << endl;
     }
+    cout << "Finished search!! The best feature subset is {";
+    for(int i = 0; i < bestAccuracySubset.size(); ++i) {
+        if(i == bestAccuracySubset.size()-1) {
+            cout << bestAccuracySubset[i];
+        }
+        else {
+            cout << bestAccuracySubset[i] << ", ";
+        }
+    }
+    cout << "}, which has an accuracy of " << bestOverallAccuracy*100 << '%' << endl;
 }
 
 double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> currentSet, int featureToAdd) {
