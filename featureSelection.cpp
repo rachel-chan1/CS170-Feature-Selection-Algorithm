@@ -8,6 +8,7 @@
 using namespace std;
 
 void forwardSearch(vector<vector<double>>);
+void backwardElimination(vector<vector<double>>);
 double leaveOneOutCrossValidation(vector<vector<double>>, vector<int>, int);
 double euclideanDistance(vector<double>, vector<double>);
 
@@ -45,12 +46,23 @@ int main() {
 
     int alg = -1;
     cin >> alg;
+    
+    vector<int> allFeatures;
+    for(int i = 1; i < data[0].size(); ++i) {
+        allFeatures.push_back(i);
+    }
+    double accuracy = leaveOneOutCrossValidation(data, allFeatures, -1);
 
     cout << "This dataset has " << data[0].size()-1 << " features (not including the class attribute), with " << data.size() << " instances." << endl;
-    cout << "Running nearest neighbor with all " << data[0].size()-1 << " features, using \"leaving-one-out\" evaluation, I get an accuracy of " << endl;
- 
-    forwardSearch(data);
-    //leaveOneOutCrossValidation(data);
+    cout << "Running nearest neighbor with all " << data[0].size()-1 << " features, using \"leaving-one-out\" evaluation, I get an accuracy of " << accuracy*100 << '%' << endl << endl;
+    cout << "Beginning search." << endl;
+
+    if(alg == 1) {
+        forwardSearch(data);
+    }
+    else if(alg == 2) {
+        backwardElimination(data);
+    }
 
     return 0;
 }
@@ -76,10 +88,10 @@ void forwardSearch(vector<vector<double>> data) {
             //cout << "Considering adding the " << j << " feature" << endl;
             accuracy = leaveOneOutCrossValidation(data, currentSetOfFeatures, j);
             if(currentSetOfFeatures.size() == 0) {
-                cout << "Using feature(s) {" << j << "} accuracy is " << accuracy*100 << '%' << endl;
+                cout << "   Using feature(s) {" << j << "} accuracy is " << accuracy*100 << '%' << endl;
             }
             else {
-                cout << "Using feature(s) {" << j << ", ";
+                cout << "   Using feature(s) {" << j << ", ";
                 for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
                     if(i == currentSetOfFeatures.size()-1) {
                         cout << currentSetOfFeatures[i];
@@ -126,16 +138,129 @@ void forwardSearch(vector<vector<double>> data) {
     cout << "}, which has an accuracy of " << bestOverallAccuracy*100 << '%' << endl;
 }
 
+// backward elimination
+void backwardElimination(vector<vector<double>> data) {
+    vector<int> currentSetOfFeatures;
+    vector<int> bestAccuracySubset;
+    int featureToRemoveAtThisLevel = -1;
+
+    double bestSoFarAccuracy = 0;
+    double accuracy = 0;
+    double bestOverallAccuracy = 0;
+
+    for(int i = 1; i < data[0].size(); ++i) {
+        currentSetOfFeatures.push_back(i);
+    }
+
+    cout << "On the 1th level of the search tree" << endl;
+    accuracy = leaveOneOutCrossValidation(data, currentSetOfFeatures, -1);
+    cout << "   Using feature(s) {";
+    for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
+        if(i == currentSetOfFeatures.size()-1) {
+            cout << currentSetOfFeatures[i];
+        }
+        else {
+            cout << currentSetOfFeatures[i] << ", ";
+        }
+    }
+    cout << "} accuracy is " << accuracy*100 << '%' << endl;
+
+    int i = 2;
+    while(currentSetOfFeatures.size() > 1) {
+        cout << "On the " << i << "th level of the search tree" << endl;
+        bestSoFarAccuracy = 0;
+
+        for(int j = 1; j < data[i].size(); ++j) {
+            // check if feature being considered for removal is in current set of features
+            if(find(currentSetOfFeatures.begin(), currentSetOfFeatures.end(), j) == currentSetOfFeatures.end()) {
+                continue;
+            }
+
+            accuracy = leaveOneOutCrossValidation(data, currentSetOfFeatures, j);
+            if(currentSetOfFeatures.size() == 1) {
+                cout << "   Using feature(s) {" << currentSetOfFeatures[0] << "} accuracy is " << accuracy*100 << '%' << endl;
+            }
+            else {
+                cout << "   Using feature(s) {";
+                for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
+                    if(currentSetOfFeatures[i] != j) {
+                        if(j == currentSetOfFeatures[currentSetOfFeatures.size()-1] && i == currentSetOfFeatures.size()-2) {
+                            cout << currentSetOfFeatures[i];
+                        }
+                        else if(i == currentSetOfFeatures.size()-1) {
+                            cout << currentSetOfFeatures[i];
+                        }
+                        else {
+                            cout << currentSetOfFeatures[i] << ", ";
+                        }
+                    }
+                }
+                cout << "} accuracy is " << accuracy*100 << '%' << endl;
+            }
+
+            if(accuracy > bestSoFarAccuracy) {
+                bestSoFarAccuracy = accuracy;
+                featureToRemoveAtThisLevel = j;
+            }
+        }
+
+        currentSetOfFeatures.erase(find(currentSetOfFeatures.begin(), currentSetOfFeatures.end(), featureToRemoveAtThisLevel));
+        if(bestSoFarAccuracy > bestOverallAccuracy) {
+            bestOverallAccuracy = bestSoFarAccuracy;
+            bestAccuracySubset = currentSetOfFeatures;
+        }
+        cout << "Feature set {";
+        for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
+            if(i == currentSetOfFeatures.size()-1) {
+                cout << currentSetOfFeatures[i];
+            }
+            else {
+                cout << currentSetOfFeatures[i] << ", ";
+            }
+        }
+        cout << "} was best, accuracy is " << bestSoFarAccuracy*100 << '%' << endl;
+        i++;
+    }
+    cout << "Finished search!! The best feature subset is {";
+    for(int i = 0; i < bestAccuracySubset.size(); ++i) {
+        if(i == bestAccuracySubset.size()-1) {
+            cout << bestAccuracySubset[i];
+        }
+        else {
+            cout << bestAccuracySubset[i] << ", ";
+        }
+    }
+    cout << "}, which has an accuracy of " << bestOverallAccuracy*100 << '%' << endl;
+}
+
+
+
 double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> currentSet, int featureToAdd) {
     vector<vector<double>> tempData;
-    for(int i = 0; i < data.size(); ++i) {
-        vector<double> tempRow;
-        tempRow.push_back(data[i][0]);
-        for(int j = 0; j < currentSet.size(); ++j) {
-            tempRow.push_back(data[i][currentSet[j]]);
+
+    if(find(currentSet.begin(), currentSet.end(), featureToAdd) == currentSet.end()) {  // featureToAdd is not in current set, meaning forward search
+        for(int i = 0; i < data.size(); ++i) {
+            vector<double> tempRow;
+            tempRow.push_back(data[i][0]);
+            for(int j = 0; j < currentSet.size(); ++j) {
+                tempRow.push_back(data[i][currentSet[j]]);
+            }
+            tempRow.push_back(data[i][featureToAdd]);
+            tempData.push_back(tempRow);
         }
-        tempRow.push_back(data[i][featureToAdd]);
-        tempData.push_back(tempRow);
+    }
+    else {
+        for(int i = 0; i < data.size(); ++i) {
+            vector<double> tempRow;
+            tempRow.push_back(data[i][0]);  // class label
+            for(int j = 0; j < currentSet.size(); ++j) {
+                if(j != featureToAdd) {     // only add features that is not the one being eliminatec
+                    tempRow.push_back(data[i][currentSet[j]]);
+                }
+            }
+            tempRow.push_back(data[i][featureToAdd]);
+            tempData.push_back(tempRow);
+        }
     }
 
     int numberCorrectlyClassified = 0; 
