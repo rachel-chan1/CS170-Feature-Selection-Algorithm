@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm> // find
 #include <cmath> //sqrt
+#include <cfloat> // dbl_max
 
 using namespace std;
 
@@ -237,30 +238,34 @@ void backwardElimination(vector<vector<double>> data) {
 
 double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> currentSet, int featureToAdd) {
     vector<vector<double>> tempData;
-
-    if(find(currentSet.begin(), currentSet.end(), featureToAdd) == currentSet.end()) {  // featureToAdd is not in current set, meaning forward search
+    //cout << "CURRENT SET SIZE " << currentSet.size() << endl;
+    if(featureToAdd > 0 && find(currentSet.begin(), currentSet.end(), featureToAdd) == currentSet.end()) {      // featureToAdd is not in current set and is a valid feature
+        currentSet.push_back(featureToAdd);
+        sort(currentSet.begin(), currentSet.end());
         for(int i = 0; i < data.size(); ++i) {
             vector<double> tempRow;
             tempRow.push_back(data[i][0]);
             for(int j = 0; j < currentSet.size(); ++j) {
                 tempRow.push_back(data[i][currentSet[j]]);
             }
-            tempRow.push_back(data[i][featureToAdd]);
             tempData.push_back(tempRow);
         }
     }
-    else {
+    else if (find(currentSet.begin(), currentSet.end(), featureToAdd) != currentSet.end()) {    // feature is in current set meaning backward elimination
         for(int i = 0; i < data.size(); ++i) {
             vector<double> tempRow;
             tempRow.push_back(data[i][0]);  // class label
             for(int j = 0; j < currentSet.size(); ++j) {
-                if(j != featureToAdd) {     // only add features that is not the one being eliminatec
+                if(j != featureToAdd) {     // only add features that are not the one being eliminated
                     tempRow.push_back(data[i][currentSet[j]]);
                 }
             }
-            tempRow.push_back(data[i][featureToAdd]);
+            //tempRow.push_back(data[i][featureToAdd]);
             tempData.push_back(tempRow);
         }
+    }
+    else {      // full set of features
+        tempData = data;
     }
 
     int numberCorrectlyClassified = 0; 
@@ -268,14 +273,14 @@ double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> curre
         vector<double> objectToClassify(tempData[i].begin() + 1, tempData[i].end());
         int objectToClassifyLabel = tempData[i][0];
 
-        //cout << "Looping over i, at the " << i << " location" << endl;
-        //cout << "The " << i << "th object is in class " << label << endl;
+        //cout << "Looping over i, at the " << i+1 << " location" << endl;
+        //cout << "The " << i << "th object is in class " << objectToClassifyLabel << endl;
 
-        double nearestNeighborDistance = INT_MAX;
+        double nearestNeighborDistance = DBL_MAX;
         int nearestNeighborLocation = INT_MAX;
         int nearestNeighborLabel = INT_MAX;
 
-        for(int j = 1; j < data.size(); ++j) {
+        for(int j = 0; j < data.size(); ++j) {
             if(j != i) {
                 //cout << "Ask if " << i << " is nearest neighbor with " << j << endl;
                 vector<double> neighbor(data[j].begin() + 1, data[j].end());
@@ -290,10 +295,7 @@ double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> curre
         if(objectToClassifyLabel == nearestNeighborLabel) {
             numberCorrectlyClassified++;
         }
-        //cout << "Object " << i << " is in class " << objectToClassifyLabel << endl;
-        //cout << "It's nearest neighbor is " << nearestNeighborLocation << " which is in class " << nearestNeighborLabel << endl;
     }
-    //cout << "AAAAAAAAAAAAAAAAAAAA " << static_cast<double>(numberCorrectlyClassified) / data.size() << endl;
     return (double)(numberCorrectlyClassified) / data.size();
 }
 
