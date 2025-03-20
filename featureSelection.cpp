@@ -81,7 +81,7 @@ void forwardSearch(vector<vector<double>> data) {
     for(int i = 1; i < data[0].size(); ++i) {
         cout << "On the " << i << "th level of the search tree" << endl;
         bestSoFarAccuracy = 0;
-        for(int j = 1; j < data[i].size(); ++j) {
+        for(int j = 1; j < data[0].size(); ++j) {
             // check if current feature being considered has already been added
             if(find(currentSetOfFeatures.begin(), currentSetOfFeatures.end(), j) != currentSetOfFeatures.end()) {
                 continue;
@@ -115,6 +115,7 @@ void forwardSearch(vector<vector<double>> data) {
             bestOverallAccuracy = bestSoFarAccuracy;
             bestAccuracySubset = currentSetOfFeatures;
         }
+        
         cout << "Feature set {";
         for(int i = 0; i < currentSetOfFeatures.size(); ++i) {
             if(i == currentSetOfFeatures.size()-1) {
@@ -256,11 +257,10 @@ double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> curre
             vector<double> tempRow;
             tempRow.push_back(data[i][0]);  // class label
             for(int j = 0; j < currentSet.size(); ++j) {
-                if(j != featureToAdd) {     // only add features that are not the one being eliminated
+                if(currentSet[j] != featureToAdd) {     // only add features that are not the one being eliminated
                     tempRow.push_back(data[i][currentSet[j]]);
                 }
             }
-            //tempRow.push_back(data[i][featureToAdd]);
             tempData.push_back(tempRow);
         }
     }
@@ -280,15 +280,15 @@ double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> curre
         int nearestNeighborLocation = INT_MAX;
         int nearestNeighborLabel = INT_MAX;
 
-        for(int j = 0; j < data.size(); ++j) {
+        for(int j = 0; j < tempData.size(); ++j) {
             if(j != i) {
                 //cout << "Ask if " << i << " is nearest neighbor with " << j << endl;
-                vector<double> neighbor(data[j].begin() + 1, data[j].end());
+                vector<double> neighbor(tempData[j].begin() + 1, tempData[j].end());
                 double distance = euclideanDistance(objectToClassify, neighbor);
                 if(distance < nearestNeighborDistance) {
                     nearestNeighborDistance = distance;
                     nearestNeighborLocation = j;
-                    nearestNeighborLabel = data[j][0];
+                    nearestNeighborLabel = tempData[j][0];
                 }
             }
         }
