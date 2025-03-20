@@ -12,6 +12,7 @@ void forwardSearch(vector<vector<double>>);
 void backwardElimination(vector<vector<double>>);
 double leaveOneOutCrossValidation(vector<vector<double>>, vector<int>, int);
 double euclideanDistance(vector<double>, vector<double>);
+double defaultRate(vector<vector<double>>);
 
 int main() {
     cout << "Welcome to Rachel's Feature Selection Algorithm." << endl;
@@ -41,6 +42,7 @@ int main() {
 
     file.close();
 
+    cout << "Default rate: " << defaultRate(data) << endl; 
     cout << "Type the number of the algorithm you want to run." << endl
          << "   1) Forward Selection" << endl
          << "   2) Backward Elimination" << endl;
@@ -235,8 +237,6 @@ void backwardElimination(vector<vector<double>> data) {
     cout << "}, which has an accuracy of " << bestOverallAccuracy*100 << '%' << endl;
 }
 
-
-
 double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> currentSet, int featureToAdd) {
     vector<vector<double>> tempData;
     //cout << "CURRENT SET SIZE " << currentSet.size() << endl;
@@ -305,4 +305,17 @@ double euclideanDistance(vector<double> object, vector<double> neighbor) {
         dist += pow((neighbor[i] - object[i]), 2);
     }
     return sqrt(dist);
+}
+
+double defaultRate(vector<vector<double>> data) {
+    int class1 = 0, class2 = 0;
+    for(int i = 0; i < data.size(); ++i) {
+        if(data[i][0] == 1) {
+            class1++;
+        }
+        else {
+            class2++;
+        }
+    }
+    return max((double)class1 / data.size(), (double)class2 / data.size());
 }
