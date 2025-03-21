@@ -6,7 +6,7 @@
 #include <cmath> //sqrt
 #include <cfloat> // dbl_max
 #include <chrono>
-#include <iomanip> //set precision
+#include <iomanip> //setprecision
 
 using namespace std;
 
@@ -92,7 +92,6 @@ void forwardSearch(vector<vector<double>> data) {
             if(find(currentSetOfFeatures.begin(), currentSetOfFeatures.end(), j) != currentSetOfFeatures.end()) {
                 continue;
             }
-            //cout << "Considering adding the " << j << " feature" << endl;
             accuracy = leaveOneOutCrossValidation(data, currentSetOfFeatures, j);
             if(currentSetOfFeatures.size() == 0) {
                 cout << "   Using feature(s) {" << j << "} accuracy is " << accuracy*100 << '%' << endl;
@@ -132,7 +131,6 @@ void forwardSearch(vector<vector<double>> data) {
             }
         }
         cout << "} was best, accuracy is " << bestSoFarAccuracy*100 << '%' << endl;
-        //cout << "On level " << i << " I added feature " << featureToAddAtThisLevel << " to current set" << endl;
     }
     cout << "Finished search!! The best feature subset is {";
     for(int i = 0; i < bestAccuracySubset.size(); ++i) {
@@ -254,7 +252,6 @@ void backwardElimination(vector<vector<double>> data) {
 
 double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> currentSet, int featureToAdd) {
     vector<vector<double>> tempData;
-    //cout << "CURRENT SET SIZE " << currentSet.size() << endl;
     if(featureToAdd > 0 && find(currentSet.begin(), currentSet.end(), featureToAdd) == currentSet.end()) {      // featureToAdd is not in current set and is a valid feature
         currentSet.push_back(featureToAdd);
         sort(currentSet.begin(), currentSet.end());
@@ -288,16 +285,12 @@ double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> curre
         vector<double> objectToClassify(tempData[i].begin() + 1, tempData[i].end());
         int objectToClassifyLabel = tempData[i][0];
 
-        //cout << "Looping over i, at the " << i+1 << " location" << endl;
-        //cout << "The " << i << "th object is in class " << objectToClassifyLabel << endl;
-
         double nearestNeighborDistance = DBL_MAX;
         int nearestNeighborLocation = INT_MAX;
         int nearestNeighborLabel = INT_MAX;
 
         for(int j = 0; j < tempData.size(); ++j) {
             if(j != i) {
-                //cout << "Ask if " << i << " is nearest neighbor with " << j << endl;
                 vector<double> neighbor(tempData[j].begin() + 1, tempData[j].end());
                 double distance = euclideanDistance(objectToClassify, neighbor);
                 if(distance < nearestNeighborDistance) {
