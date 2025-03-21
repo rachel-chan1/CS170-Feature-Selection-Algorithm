@@ -5,6 +5,8 @@
 #include <algorithm> // find
 #include <cmath> //sqrt
 #include <cfloat> // dbl_max
+#include <chrono>
+#include <iomanip> //set precision
 
 using namespace std;
 
@@ -80,6 +82,8 @@ void forwardSearch(vector<vector<double>> data) {
     double accuracy = 0;
     double bestOverallAccuracy = 0;
 
+    auto start_time = std::chrono::high_resolution_clock::now();    // start clock
+
     for(int i = 1; i < data[0].size(); ++i) {
         cout << "On the " << i << "th level of the search tree" << endl;
         bestSoFarAccuracy = 0;
@@ -140,6 +144,11 @@ void forwardSearch(vector<vector<double>> data) {
         }
     }
     cout << "}, which has an accuracy of " << bestOverallAccuracy*100 << '%' << endl;
+
+    auto end_time = std::chrono::high_resolution_clock::now();  // end clock
+    std::chrono::duration<double> elapsed = end_time - start_time;  // calculate time taken
+    cout << "Time taken: " << setprecision(3) << elapsed.count() << " seconds" << endl;
+
 }
 
 // backward elimination
@@ -155,6 +164,8 @@ void backwardElimination(vector<vector<double>> data) {
     for(int i = 1; i < data[0].size(); ++i) {
         currentSetOfFeatures.push_back(i);
     }
+
+    auto start_time = std::chrono::high_resolution_clock::now();    // start clock
 
     cout << "On the 1th level of the search tree" << endl;
     accuracy = leaveOneOutCrossValidation(data, currentSetOfFeatures, -1);
@@ -235,6 +246,10 @@ void backwardElimination(vector<vector<double>> data) {
         }
     }
     cout << "}, which has an accuracy of " << bestOverallAccuracy*100 << '%' << endl;
+
+    auto end_time = std::chrono::high_resolution_clock::now();  // end clock
+    std::chrono::duration<double> elapsed = end_time - start_time;  // calculate time taken
+    cout << "Time taken: " << setprecision(3) << elapsed.count() << " seconds" << endl;
 }
 
 double leaveOneOutCrossValidation(vector<vector<double>> data, vector<int> currentSet, int featureToAdd) {
